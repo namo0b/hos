@@ -1,6 +1,8 @@
 #ifndef HOSPITAL_H
 #define HOSPITAL_H
 
+/* OWNER AREA: B - Core C Backend */
+
 #include <stdio.h>
 
 #define NAME_SIZE 50

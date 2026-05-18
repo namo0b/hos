@@ -1,3 +1,5 @@
+/* OWNER AREA: B - Core C Backend */
+
 #include "../include/hospital.h"
 
 #ifdef _WIN32
