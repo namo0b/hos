@@ -96,6 +96,25 @@ static void findLatestRecord(const char *targetName, char *recentSymptom,
     fclose(file);
 }
 
+static void formatSymptomsForDisplay(const char *rawSymptoms, char *display, int size) {
+    int sourceIndex;
+    int destIndex = 0;
+
+    /* CHANGED: 프론트에서 보낸 심정지|구토 형식을 저장/표시용 심정지, 구토 형식으로 변환 */
+    for (sourceIndex = 0; rawSymptoms[sourceIndex] != '\0' && destIndex < size - 1; sourceIndex++) {
+        if (rawSymptoms[sourceIndex] == '|') {
+            if (destIndex < size - 2) {
+                display[destIndex++] = ',';
+                display[destIndex++] = ' ';
+            }
+        } else {
+            display[destIndex++] = rawSymptoms[sourceIndex];
+        }
+    }
+
+    display[destIndex] = '\0';
+}
+
 void handleRecordsApi(SOCKET client) {
     char *json = (char *)malloc(RESPONSE_SIZE);
 
@@ -188,6 +207,7 @@ void handleCompleteApi(SOCKET client) {
 
 void handleRegisterApi(SOCKET client, const char *body) {
     char name[NAME_SIZE];
+    char symptomsRaw[SYMPTOM_SIZE];
     char symptom[SYMPTOM_SIZE];
     char receptionTime[TIME_SIZE];
     char recentSymptom[SYMPTOM_SIZE];
@@ -203,16 +223,19 @@ void handleRegisterApi(SOCKET client, const char *body) {
     char json[2048];
 
     if (!getFormValue(body, "name", name, sizeof(name)) ||
-        !getFormValue(body, "symptom", symptom, sizeof(symptom)) ||
-        strlen(name) == 0 || strlen(symptom) == 0) {
+        (!getFormValue(body, "symptoms", symptomsRaw, sizeof(symptomsRaw)) &&
+         !getFormValue(body, "symptom", symptomsRaw, sizeof(symptomsRaw))) ||
+        strlen(name) == 0 || strlen(symptomsRaw) == 0) {
         sendHttp(client, 400, "Bad Request", "application/json; charset=utf-8",
                  "{\"error\":\"name and symptom are required\"}");
         return;
     }
 
+    /* CHANGED: 다중 증상은 raw 문자열로 우선순위를 계산하고, 표시용 문자열은 별도로 저장 */
+    formatSymptomsForDisplay(symptomsRaw, symptom, sizeof(symptom));
     findLatestRecord(name, recentSymptom, sizeof(recentSymptom), &recentPriority);
     isRevisit = (recentPriority > 0);
-    currentPriority = calculateSymptomPriority(symptom);
+    currentPriority = calculateSymptomsPriority(symptomsRaw);
     finalPriority = calculateFinalPriority(isRevisit, recentPriority, currentPriority);
     getCurrentTime(receptionTime, sizeof(receptionTime));
     appendMedicalRecordToCsv(name, symptom, receptionTime, finalPriority);
@@ -234,7 +257,7 @@ void handleRegisterApi(SOCKET client, const char *body) {
              "\"patientNo\":%d,\"patientType\":\"%s\",\"recentRecord\":\"%s\","
              "\"recentPriority\":%d,\"currentPriority\":%d,\"finalPriority\":%d}",
              safeName, safeSymptom, safeTime, nextWebPatientNo - 1,
-             isRevisit ? "?ъ쭊 ?섏옄" : "?좉퇋 ?섏옄",
+             isRevisit ? "재진 환자" : "신규 환자",
              safeRecent, recentPriority, currentPriority, finalPriority);
 
     sendHttp(client, 200, "OK", "application/json; charset=utf-8", json);

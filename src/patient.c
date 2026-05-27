@@ -75,7 +75,7 @@ void receivePatient(TreeNode *root, PriorityQueue *queue,
 
     printf("\n[환자 접수]\n");
     readLine("환자 이름: ", name, sizeof(name));
-    readLine("증상 입력: ", symptom, sizeof(symptom));
+    readLine("증상 입력(여러 개는 쉼표로 구분): ", symptom, sizeof(symptom));
 
     printf("\n기존 진료 기록을 검색합니다.\n");
 
@@ -92,7 +92,8 @@ void receivePatient(TreeNode *root, PriorityQueue *queue,
         printf("%s 환자의 기존 진료 기록이 없습니다. 신규 환자로 분류합니다.\n", name);
     }
 
-    currentPriority = calculateSymptomPriority(symptom);
+    /* CHANGED: 콘솔 입력도 여러 증상을 쉼표로 넣으면 가장 긴급한 단계로 계산 */
+    currentPriority = calculateSymptomsPriority(symptom);
     finalPriority = calculateFinalPriority(isRevisit, recentPriority, currentPriority);
     getCurrentTime(receptionTime, sizeof(receptionTime));
 

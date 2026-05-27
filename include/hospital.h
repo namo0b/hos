@@ -6,7 +6,7 @@
 #include <stdio.h>
 
 #define NAME_SIZE 50
-#define SYMPTOM_SIZE 100
+#define SYMPTOM_SIZE 256
 #define TIME_SIZE 30
 #define TYPE_SIZE 20
 #define CATEGORY_SIZE 30
@@ -57,6 +57,7 @@ void readLine(const char *message, char *buffer, int size);
 int readMenuChoice(void);
 void getCurrentTime(char *buffer, int size);
 int calculateSymptomPriority(const char *symptom);
+int calculateSymptomsPriority(const char *symptoms);
 int calculateFinalPriority(int isRevisit, int recentPriority, int currentPriority);
 void ensureDataDirectory(void);
 

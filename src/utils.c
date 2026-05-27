@@ -107,6 +107,34 @@ int calculateSymptomPriority(const char *symptom) {
     return 4;
 }
 
+int calculateSymptomsPriority(const char *symptoms) {
+    char buffer[SYMPTOM_SIZE];
+    char *token;
+    int bestPriority = 5;
+
+    /* CHANGED: 여러 증상이 | 또는 , 로 들어오면 가장 긴급한 단계로 계산 */
+    strncpy(buffer, symptoms, sizeof(buffer) - 1);
+    buffer[sizeof(buffer) - 1] = '\0';
+
+    token = strtok(buffer, "|,");
+    while (token != NULL) {
+        while (*token == ' ') {
+            token++;
+        }
+
+        {
+            int priority = calculateSymptomPriority(token);
+            if (priority < bestPriority) {
+                bestPriority = priority;
+            }
+        }
+
+        token = strtok(NULL, "|,");
+    }
+
+    return bestPriority;
+}
+
 int calculateFinalPriority(int isRevisit, int recentPriority, int currentPriority) {
     if (isRevisit && recentPriority < currentPriority) {
         return recentPriority;

@@ -15,13 +15,13 @@ int runWebServer(int port) {
     initPriorityQueue(&waitingQueue);
 
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-        printf("Winsock 珥덇린?붿뿉 ?ㅽ뙣?덉뒿?덈떎.\n");
+        printf("Winsock 초기화에 실패했습니다.\n");
         return 1;
     }
 
     serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (serverSocket == INVALID_SOCKET) {
-        printf("?쒕쾭 ?뚯폆??留뚮뱾 ???놁뒿?덈떎.\n");
+        printf("서버 소켓을 만들 수 없습니다.\n");
         WSACleanup();
         return 1;
     }
@@ -31,22 +31,22 @@ int runWebServer(int port) {
     serverAddress.sin_port = htons((unsigned short)port);
 
     if (bind(serverSocket, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) == SOCKET_ERROR) {
-        printf("?ы듃 %d瑜??ъ슜?????놁뒿?덈떎. ?대? ?ㅽ뻾 以묒씤吏 ?뺤씤??二쇱꽭??\n", port);
+        printf("포트 %d를 사용할 수 없습니다. 이미 실행 중인지 확인해 주세요.\n", port);
         closesocket(serverSocket);
         WSACleanup();
         return 1;
     }
 
     if (listen(serverSocket, SOMAXCONN) == SOCKET_ERROR) {
-        printf("?붿껌 ?湲??곹깭濡??꾪솚?섏? 紐삵뻽?듬땲??\n");
+        printf("요청 대기 상태로 전환하지 못했습니다.\n");
         closesocket(serverSocket);
         WSACleanup();
         return 1;
     }
 
-    printf("\n???쒕쾭媛 ?ㅽ뻾?섏뿀?듬땲??\n");
-    printf("釉뚮씪?곗??먯꽌 http://localhost:%d 瑜??댁뼱二쇱꽭??\n", port);
-    printf("醫낅즺?섎젮硫???李쎌뿉??Ctrl+C瑜??꾨Ⅴ?몄슂.\n\n");
+    printf("\n웹 서버가 실행되었습니다.\n");
+    printf("브라우저에서 http://localhost:%d 를 열어 주세요.\n", port);
+    printf("종료하려면 이 창에서 Ctrl+C를 누르세요.\n\n");
 
     while (1) {
         SOCKET client = accept(serverSocket, NULL, NULL);
