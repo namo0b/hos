@@ -23,6 +23,7 @@ GitHub `main`과 비교했을 때 추가로 팀원에게 말해야 할 핵심:
 - C 웹 서버 빌드: `.\build-web.ps1` 성공
 - 경고 빌드: `gcc -Wall -Wextra` 기준 미사용 변수/함수 경고 없음
 - JS 문법 검사: 기본 `node`는 `Access is denied`로 막혔지만, Codex 번들 Node 경로로 검사 성공
+- 웹 서버 재시작 편의 스크립트: `restart-web.ps1` 추가
 
 JS 문법 검사에 사용한 명령:
 
@@ -273,6 +274,46 @@ void handleClient(SOCKET client);
 - `web/web_utils.c`: 문자열 append, JSON escape, URL decode, form 값 추출
 - `web/http_response.c`: HTTP 응답 헤더/본문 전송
 - `web/static_files.c`: HTML/CSS/JS 정적 파일 응답
+
+### 10. 서버 재시작 안정화 및 실행 스크립트 추가
+
+이 항목은 프론트 담당 영역이 아니라 백엔드/실행 환경 담당자에게 전달해야 할 내용입니다.
+
+완전 종료 후 다시 실행할 때 서버가 간헐적으로 바로 종료되거나 8080 포트 응답이 늦게 잡히는 문제가 있었습니다. 이를 줄이기 위해 서버 주소 구조체를 bind 전에 명시적으로 초기화했습니다.
+
+관련 코드 위치:
+
+- 파일: `web/web_server.c`
+- 라인: 6, 30-31
+
+```c
+#include <string.h> // memset으로 소켓 주소 구조체를 초기화하기 위해 사용
+```
+
+```c
+// 서버 재시작 시 주소 구조체에 남은 쓰레기값이 bind를 방해하지 않도록 초기화
+memset(&serverAddress, 0, sizeof(serverAddress));
+```
+
+또한 서버 재시작을 쉽게 하기 위해 새 PowerShell 스크립트를 추가했습니다.
+
+관련 파일:
+
+- 파일: `restart-web.ps1`
+
+역할:
+
+- 기존에 실행 중인 `hospital_web.exe` 종료
+- `build-web.ps1` 실행으로 웹 서버 재빌드
+- `bin\hospital_web.exe` 실행
+- 터미널에서 `Ctrl+C`를 누를 때까지 서버 유지
+
+Visual Studio 터미널에서 실행할 명령:
+
+```powershell
+cd C:\github\hos
+powershell -ExecutionPolicy Bypass -File .\restart-web.ps1
+```
 
 ## 프론트와 백엔드 연결 규칙
 
